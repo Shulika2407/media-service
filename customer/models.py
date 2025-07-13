@@ -61,12 +61,12 @@ def user_image_file_path(instance, filename):
 
 
 class Profile(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     username = models.CharField(max_length=65, unique=True)
     first_name = models.CharField(max_length=65, null=True, blank=True)
     last_name = models.CharField(max_length=65, null=True, blank=True)
     user_image = models.ImageField(null=True, blank=True, upload_to=user_image_file_path)
-    age = models.IntegerField()
+    age = models.IntegerField(null=True, blank=True)
 
     class Meta:
         verbose_name = _("Profile")
