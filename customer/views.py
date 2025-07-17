@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework import viewsets, mixins, status
+from rest_framework import viewsets, mixins, status, request
 from rest_framework import views
 from rest_framework.decorators import action
 from rest_framework import generics
@@ -13,12 +13,15 @@ from rest_framework.response import Response
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.settings import api_settings
-from customer.models import Profile
+from customer.models import Profile, Follow
 from customer.serializers import (UserRegisterSerializers,
                                   ProfileListSerializers,
                                   ProfileDetailSerializer,
                                   ProfileImageSerializer,
-                                  AuthTokenSerializer)
+                                  AuthTokenSerializer,
+                                  FollowCreateSerializer,
+                                  FollowingListSerializer,
+                                  FollowingDetailSerializer, FollowersListSerializer)
 
 
 # Create your views here.
@@ -90,9 +93,9 @@ class ProfileViews(mixins.ListModelMixin,
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CreateTokenView(ObtainAuthToken):
-    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
-    serializer_class = AuthTokenSerializer
+# class CreateTokenView(ObtainAuthToken):
+#     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+#     serializer_class = AuthTokenSerializer
 
 
 class ManageUserView(generics.RetrieveUpdateDestroyAPIView):
@@ -102,3 +105,52 @@ class ManageUserView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         return self.request.user.profile
 
+
+class FollowingView(mixins.ListModelMixin,
+                    mixins.CreateModelMixin,
+                    viewsets.GenericViewSet,
+                    mixins.RetrieveModelMixin, mixins.DestroyModelMixin):
+    permission_classes = (IsOwner,)
+
+    def get_queryset(self):
+        return (Follow.objects.filter(followers=self.request.user)
+                .order_by("-created_at"))
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return FollowCreateSerializer
+        if self.action == "retrieve":
+            return FollowingDetailSerializer
+        return FollowingListSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        response_data = serializer.data["following_profile"]
+        response_data["created_at"] = serializer.instance.created_at
+        return Response(response_data,
+                        status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.followers != request.user:
+            return Response(
+                {
+                    "detail": "You are not authorized to unfollow this user or "
+                              "this follow relationship does not belong to you."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class FollowersView(mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = (IsAuthenticatedOrReadOnly, IsOwner)
+
+    def get_queryset(self):
+        return (Follow.objects.filter(following=self.request.user)
+                .order_by("-created_at"))
+
+    def get_serializer_class(self):
+        return FollowersListSerializer

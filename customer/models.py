@@ -45,24 +45,24 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     """User model."""
 
-    username = None
+    username = models.CharField(max_length=150, unique=True, blank=False, null=False)
     email = models.EmailField(_("email address"), unique=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ["username"]
 
     objects = UserManager()
 
 
 def user_image_file_path(instance, filename):
     _, extension = os.path.splitext(filename)
-    filename = f"{slugify(instance.username)}--{uuid.uuid4}{extension}"
+    filename = f"{slugify(instance.user.username)}--{uuid.uuid4()}{extension}"
     return os.path.join("uploads/profile", filename)
 
 
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
-    username = models.CharField(max_length=65, unique=True)
+    # username = models.CharField(max_length=65, unique=True)
     first_name = models.CharField(max_length=65, null=True, blank=True)
     last_name = models.CharField(max_length=65, null=True, blank=True)
     user_image = models.ImageField(null=True, blank=True, upload_to=user_image_file_path)
@@ -74,4 +74,19 @@ class Profile(models.Model):
 
     def __str__(self):
         # Повертаємо ім'я користувача профілю
-        return self.username
+        return self.user.username
+
+
+class Follow(models.Model):
+    followers = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                               related_name="follower_set")
+    following = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                               related_name="following_set")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("followers", "following")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.followers.profile.username} follows {self.following.profile.username}"

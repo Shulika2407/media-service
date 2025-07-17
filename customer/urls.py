@@ -1,5 +1,6 @@
 from customer.views import (CreateUserViews, ProfileViews,
-                            CreateTokenView, ManageUserView)
+                            ManageUserView,
+                            FollowingView, FollowersView)
 from django.urls import path, include
 from rest_framework import routers
 from rest_framework_simplejwt.views import (
@@ -12,6 +13,8 @@ app_name = "customer"
 
 router = routers.DefaultRouter()
 router.register('profiles', ProfileViews, basename="profile")
+router.register("following", FollowingView, basename="following")
+router.register("followers", FollowersView, basename="followers")
 
 urlpatterns = [
     path("register/", CreateUserViews.as_view(), name="create"),
