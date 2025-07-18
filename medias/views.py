@@ -6,9 +6,10 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticate
 
 from medias.serializers import (PostFollowingSerializer,
                                 MyPostSerializer,
-                                LikeSerializer)
+                                LikeSerializer, CommentsSerializer)
 from rest_framework import viewsets, mixins, status
-from medias.models import Post, Like
+from medias.models import (Post,
+                           Like, Comments)
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from customer.permissions import IsOwner
@@ -121,6 +122,24 @@ class LikeViews(mixins.ListModelMixin,
         instance.delete()
 
 
+class CommentsViews(mixins.ListModelMixin,
+                    mixins.DestroyModelMixin,
+                    mixins.CreateModelMixin,
+                    viewsets.GenericViewSet):
+    serializer_class = CommentsSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Comments.objects.all()
 
+    def get_queryset(self):
+        queryset = self.queryset.filter(user=self.request.user)
 
+        return queryset.order_by("-created_at")
 
+    def perform_create(self, serializer):
+        post = serializer.validated_data.get('post')
+        user = self.request.user
+
+        if Comments.objects.filter(user=user, post=post).exists():
+            raise ValidationError({"detail": "You have already comments this post."})
+
+        serializer.save(user=user)
