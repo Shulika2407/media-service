@@ -1,11 +1,14 @@
+from django.core.exceptions import ValidationError
 from django.shortcuts import render
 from rest_framework import views
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 
-from medias.serializers import PostFollowingSerializer, MyPostSerializer
+from medias.serializers import (PostFollowingSerializer,
+                                MyPostSerializer,
+                                LikeSerializer)
 from rest_framework import viewsets, mixins, status
-from medias.models import Post
+from medias.models import Post, Like
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from customer.permissions import IsOwner
@@ -87,6 +90,35 @@ class FollowingPost(mixins.ListModelMixin, viewsets.GenericViewSet):
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+
+class LikeViews(mixins.ListModelMixin,
+                mixins.DestroyModelMixin,
+                mixins.CreateModelMixin,
+                viewsets.GenericViewSet):
+    serializer_class = LikeSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Like.objects.all()
+
+    def get_queryset(self):
+        queryset = self.queryset.filter(user=self.request.user)
+
+        return queryset.order_by("-created_at")
+
+    def perform_create(self, serializer):
+        post = serializer.validated_data.get('post')
+        user = self.request.user
+
+        if Like.objects.filter(user=user, post=post).exists():
+            raise ValidationError({"detail": "You have already liked this post."})
+
+        serializer.save(user=user)
+
+    def perform_destroy(self, instance):
+
+        if instance.user != self.request.user:
+            raise PermissionDenied("You do not have permission to delete this like.")
+        instance.delete()
 
 
 
