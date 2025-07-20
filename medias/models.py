@@ -46,6 +46,10 @@ class Like(models.Model):
                 f" to the post {self.post.name_post}"
                 f" ({self.post.user.username})")
 
+    class Meta:
+        # Це гарантує унікальність пари (user, post)
+        unique_together = ('user', 'post')
+
 
 class Comments(models.Model):
     user = models.ForeignKey(
@@ -55,6 +59,10 @@ class Comments(models.Model):
     text_comment = models.CharField(max_length=100)
     post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="comments")
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Це гарантує унікальність пари (user, post)
+        unique_together = ('user', 'post')
 
     def __str__(self):
         return (f"Comments from {self.user.username}"
