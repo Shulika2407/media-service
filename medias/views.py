@@ -19,11 +19,11 @@ from customer.models import Follow, User
 
 class MyPostView(viewsets.ModelViewSet):
     serializer_class = MyPostSerializer
-    permission_classes = (IsOwner,)
+    permission_classes = (IsOwner, IsAuthenticated,)
     queryset = Post.objects.all()
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user).order_by("-created_at").distinct()
+        return self.queryset.filter(user=self.request.user).order_by("-created_at", "-id").distinct()
 
     @action(
         methods=["POST"],

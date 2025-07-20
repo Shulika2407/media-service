@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.settings import api_settings
+from rest_framework.pagination import PageNumberPagination
 from customer.models import Profile, Follow
 from customer.serializers import (UserRegisterSerializers,
                                   ProfileListSerializers,
@@ -32,6 +33,10 @@ class CreateUserViews(generics.CreateAPIView):
     authentication_classes = ()
     permission_classes = (AllowAny,)
 
+class ProfilePagination(PageNumberPagination):
+    page_size = 5
+    max_page_size = 200
+
 
 class ProfileViews(mixins.ListModelMixin,
                    mixins.RetrieveModelMixin,
@@ -39,6 +44,7 @@ class ProfileViews(mixins.ListModelMixin,
                    mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     queryset = Profile.objects.select_related("user").order_by("id")
     permission_classes = (IsAuthenticatedOrReadOnly, IsOwner)
+    pagination_class = ProfilePagination
 
     def get_queryset(self):
         first_name = self.request.query_params.get("first_name")

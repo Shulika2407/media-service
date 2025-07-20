@@ -16,6 +16,7 @@ router.register('profiles', ProfileViews, basename="profile")
 router.register("following", FollowingView, basename="following")
 router.register("followers", FollowersView, basename="followers")
 
+
 urlpatterns = [
     path("register/", CreateUserViews.as_view(), name="create"),
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
