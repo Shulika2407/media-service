@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     "medias",
     "rest_framework",
     "rest_framework.authtoken",
-    'customer.apps.CustomerConfig',
+    "customer.apps.CustomerConfig",
     "media_service",
     "debug_toolbar",
 ]

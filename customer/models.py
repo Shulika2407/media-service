@@ -61,11 +61,15 @@ def user_image_file_path(instance, filename):
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
+    )
     # username = models.CharField(max_length=65, unique=True)
     first_name = models.CharField(max_length=65, null=True, blank=True)
     last_name = models.CharField(max_length=65, null=True, blank=True)
-    user_image = models.ImageField(null=True, blank=True, upload_to=user_image_file_path)
+    user_image = models.ImageField(
+        null=True, blank=True, upload_to=user_image_file_path
+    )
     age = models.IntegerField(null=True, blank=True)
 
     class Meta:
@@ -78,10 +82,12 @@ class Profile(models.Model):
 
 
 class Follow(models.Model):
-    followers = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-                                               related_name="follower_set")
-    following = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-                                               related_name="following_set")
+    followers = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="follower_set"
+    )
+    following = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="following_set"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

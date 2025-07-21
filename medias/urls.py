@@ -1,5 +1,4 @@
-from medias.views import (MyPostView, FollowingPost,
-                          LikeViews, CommentsViews)
+from medias.views import MyPostView, FollowingPost, LikeViews, CommentsViews
 from django.urls import path, include
 from rest_framework import routers
 
@@ -14,4 +13,3 @@ router.register("comments", CommentsViews, basename="comments")
 urlpatterns = [
     path("", include(router.urls)),
 ]
-

@@ -10,26 +10,26 @@ class FollowingPostTests(MediasBaseTest):
 
     def setUp(self):
         super().setUp()
-        self._authenticate_user(self.user1) # Автентифікація user1
+        self._authenticate_user(self.user1)  # Автентифікація user1
 
         # Пости для тестування підписок
         self.post_by_user2 = Post.objects.create(
             user=self.user2,
             name_post="Post from User2",
             hashtags="#user2 #content",
-            text="User2's public content."
+            text="User2's public content.",
         )
         self.post_by_user3_1 = Post.objects.create(
             user=self.user3,
             name_post="Post by User3 One",
             hashtags="#user3",
-            text="User3's content A."
+            text="User3's content A.",
         )
         self.post_by_user3_2 = Post.objects.create(
             user=self.user3,
             name_post="Post by User3 Two",
             hashtags="#example",
-            text="User3's content B."
+            text="User3's content B.",
         )
 
     def test_list_following_posts_authenticated_no_follows(self):
@@ -48,9 +48,11 @@ class FollowingPostTests(MediasBaseTest):
 
     def test_list_following_posts_unauthenticated(self):
         """Перевірка, що неавтентифікований користувач не отримує пости підписок."""
-        self.client.credentials() # Зняти автентифікацію
+        self.client.credentials()  # Зняти автентифікацію
         response = self.client.get(self.following_posts_list_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK) # Дозволяє IsAuthenticatedOrReadOnly
+        self.assertEqual(
+            response.status_code, status.HTTP_200_OK
+        )  # Дозволяє IsAuthenticatedOrReadOnly
         self.assertEqual(len(response.data), 0)
 
     def test_filter_by_hashtags(self):
@@ -61,7 +63,7 @@ class FollowingPostTests(MediasBaseTest):
         url = f"{self.following_posts_list_url}?hashtags=user3"
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1) # Тільки один пост user3 має #user3
+        self.assertEqual(len(response.data), 1)  # Тільки один пост user3 має #user3
         self.assertEqual(response.data[0]["name_post"], self.post_by_user3_1.name_post)
 
     def test_filter_by_name_post(self):

@@ -15,14 +15,17 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.settings import api_settings
 from rest_framework.pagination import PageNumberPagination
 from customer.models import Profile, Follow
-from customer.serializers import (UserRegisterSerializers,
-                                  ProfileListSerializers,
-                                  ProfileDetailSerializer,
-                                  ProfileImageSerializer,
-                                  AuthTokenSerializer,
-                                  FollowCreateSerializer,
-                                  FollowingListSerializer,
-                                  FollowingDetailSerializer, FollowersListSerializer)
+from customer.serializers import (
+    UserRegisterSerializers,
+    ProfileListSerializers,
+    ProfileDetailSerializer,
+    ProfileImageSerializer,
+    AuthTokenSerializer,
+    FollowCreateSerializer,
+    FollowingListSerializer,
+    FollowingDetailSerializer,
+    FollowersListSerializer,
+)
 
 
 # Create your views here.
@@ -33,15 +36,19 @@ class CreateUserViews(generics.CreateAPIView):
     authentication_classes = ()
     permission_classes = (AllowAny,)
 
+
 class ProfilePagination(PageNumberPagination):
     page_size = 5
     max_page_size = 200
 
 
-class ProfileViews(mixins.ListModelMixin,
-                   mixins.RetrieveModelMixin,
-                   viewsets.GenericViewSet,
-                   mixins.UpdateModelMixin, mixins.DestroyModelMixin):
+class ProfileViews(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+):
     queryset = Profile.objects.select_related("user").order_by("id")
     permission_classes = (IsAuthenticatedOrReadOnly, IsOwner)
     pagination_class = ProfilePagination
@@ -65,11 +72,7 @@ class ProfileViews(mixins.ListModelMixin,
                 description="Filter by first_name (ex ?first_name=Tester)",
                 required=False,
             ),
-            OpenApiParameter(
-                "last_name",
-                type=str,
-                description="Filter by last_name"
-            )
+            OpenApiParameter("last_name", type=str, description="Filter by last_name"),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -112,15 +115,19 @@ class ManageUserView(generics.RetrieveUpdateDestroyAPIView):
         return self.request.user.profile
 
 
-class FollowingView(mixins.ListModelMixin,
-                    mixins.CreateModelMixin,
-                    viewsets.GenericViewSet,
-                    mixins.RetrieveModelMixin, mixins.DestroyModelMixin):
+class FollowingView(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+):
     permission_classes = (IsOwner,)
 
     def get_queryset(self):
-        return (Follow.objects.filter(followers=self.request.user)
-                .order_by("-created_at"))
+        return Follow.objects.filter(followers=self.request.user).order_by(
+            "-created_at"
+        )
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -130,13 +137,14 @@ class FollowingView(mixins.ListModelMixin,
         return FollowingListSerializer
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         response_data = serializer.data["following_profile"]
         response_data["created_at"] = serializer.instance.created_at
-        return Response(response_data,
-                        status=status.HTTP_201_CREATED)
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -144,8 +152,9 @@ class FollowingView(mixins.ListModelMixin,
             return Response(
                 {
                     "detail": "You are not authorized to unfollow this user or "
-                              "this follow relationship does not belong to you."},
-                status=status.HTTP_403_FORBIDDEN
+                    "this follow relationship does not belong to you."
+                },
+                status=status.HTTP_403_FORBIDDEN,
             )
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -155,8 +164,9 @@ class FollowersView(mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly, IsOwner)
 
     def get_queryset(self):
-        return (Follow.objects.filter(following=self.request.user)
-                .order_by("-created_at"))
+        return Follow.objects.filter(following=self.request.user).order_by(
+            "-created_at"
+        )
 
     def get_serializer_class(self):
         return FollowersListSerializer

@@ -6,7 +6,6 @@ from django.utils.text import slugify
 from customer.models import User, UserManager
 
 
-
 def image_post(instance, filename):
     _, extension = os.path.splitext(filename)
     filename = f"{slugify(instance.name_post)}-{uuid.uuid4()}{extension}"
@@ -18,7 +17,7 @@ class Post(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         help_text="The user who created the post.",
-        related_name="posts"
+        related_name="posts",
     )
     name_post = models.CharField(max_length=55)
     hashtags = models.CharField(max_length=65, blank=True)
@@ -37,34 +36,42 @@ class Like(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="likes", help_text="user who liked")
+        related_name="likes",
+        help_text="user who liked",
+    )
     post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="likes")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return (f"Like from {self.user.username}"
-                f" to the post {self.post.name_post}"
-                f" ({self.post.user.username})")
+        return (
+            f"Like from {self.user.username}"
+            f" to the post {self.post.name_post}"
+            f" ({self.post.user.username})"
+        )
 
     class Meta:
         # Це гарантує унікальність пари (user, post)
-        unique_together = ('user', 'post')
+        unique_together = ("user", "post")
 
 
 class Comments(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="comments", help_text="user who comments")
+        related_name="comments",
+        help_text="user who comments",
+    )
     text_comment = models.CharField(max_length=100)
     post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="comments")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         # Це гарантує унікальність пари (user, post)
-        unique_together = ('user', 'post')
+        unique_together = ("user", "post")
 
     def __str__(self):
-        return (f"Comments from {self.user.username}"
-                f" to the post {self.post.name_post}"
-                f" ({self.post.user.username})")
+        return (
+            f"Comments from {self.user.username}"
+            f" to the post {self.post.name_post}"
+            f" ({self.post.user.username})"
+        )

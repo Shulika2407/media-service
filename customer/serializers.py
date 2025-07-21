@@ -11,15 +11,14 @@ class UserRegisterSerializers(serializers.ModelSerializer):
         fields = ("id", "email", "password", "username")
         extra_kwargs = {
             "password": {
-                "write_only": True, "min_length": 5,
+                "write_only": True,
+                "min_length": 5,
             },
-            "email": {
-                "required": True
-            },
+            "email": {"required": True},
             "username": {
                 "required": True,
                 "min_length": 5,
-            }
+            },
         }
 
     def create(self, validated_data):
@@ -68,9 +67,7 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
         if user_data:
             user_instance = instance.user
             user_serializer = UserRegisterSerializers(
-                instance=user_instance,
-                data=user_data,
-                partial=True
+                instance=user_instance, data=user_data, partial=True
             )
             user_serializer.is_valid(raise_exception=True)
             user_serializer.save()
@@ -89,7 +86,9 @@ class AuthTokenSerializer(serializers.Serializer):
         password = attrs.get("password")
 
         if email and password:
-            user = authenticate(request=self.context.get('request'), email=email, password=password)
+            user = authenticate(
+                request=self.context.get("request"), email=email, password=password
+            )
 
             if user:
                 if not user.is_active:
@@ -108,7 +107,9 @@ class AuthTokenSerializer(serializers.Serializer):
 
 class FollowCreateSerializer(serializers.ModelSerializer):
     email_to_follow = serializers.EmailField(write_only=True, required=True)
-    following_profile = ProfileListSerializers(read_only=True, source="following.profile")
+    following_profile = ProfileListSerializers(
+        read_only=True, source="following.profile"
+    )
 
     class Meta:
         model = Follow
@@ -123,12 +124,16 @@ class FollowCreateSerializer(serializers.ModelSerializer):
             user_to_follow = get_user_model().objects.get(email=email_to_follow)
 
         except get_user_model().DoesNotExist:
-            raise serializers.ValidationError({"email_to_follow": "User with this email does not exist."})
+            raise serializers.ValidationError(
+                {"email_to_follow": "User with this email does not exist."}
+            )
 
         if request_user == user_to_follow:
             raise serializers.ValidationError("A user cannot be signed to themselves.")
 
-        if Follow.objects.filter(followers=request_user, following=user_to_follow).exists():
+        if Follow.objects.filter(
+            followers=request_user, following=user_to_follow
+        ).exists():
             raise serializers.ValidationError("You are already following this user.")
 
         data["user_to_follow_obj"] = user_to_follow
@@ -138,8 +143,9 @@ class FollowCreateSerializer(serializers.ModelSerializer):
         user_to_follow = validated_data.pop("user_to_follow_obj")
         request_user = self.context["request"].user
 
-        follow_instance = Follow.objects.create(followers=request_user,
-                                                following=user_to_follow)
+        follow_instance = Follow.objects.create(
+            followers=request_user, following=user_to_follow
+        )
         return follow_instance
 
 
@@ -153,6 +159,7 @@ class FollowingListSerializer(serializers.ModelSerializer):
 
 class FollowingDetailSerializer(serializers.ModelSerializer):
     user_profile = ProfileDetailSerializer(read_only=True, source="following.profile")
+
     class Meta:
         model = Follow
         fields = ("id", "user_profile", "created_at")
@@ -160,10 +167,13 @@ class FollowingDetailSerializer(serializers.ModelSerializer):
 
 class FollowersListSerializer(serializers.ModelSerializer):
     """
-        Серіалізатор для відображення списку користувачів,
-        які підписані на поточного користувача (FOLLOWERS).
+    Серіалізатор для відображення списку користувачів,
+    які підписані на поточного користувача (FOLLOWERS).
     """
-    follower_user_profile = ProfileListSerializers(read_only=True, source="followers.profile")
+
+    follower_user_profile = ProfileListSerializers(
+        read_only=True, source="followers.profile"
+    )
 
     class Meta:
         model = Follow

@@ -3,8 +3,8 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 
-from customer.models import Profile, Follow # Додано імпорт Follow та Profile
-from medias.models import Post, Like, Comments # Додано імпорт моделей medias
+from customer.models import Profile, Follow  # Додано імпорт Follow та Profile
+from medias.models import Post, Like, Comments  # Додано імпорт моделей medias
 
 USER_MODEL = get_user_model()
 
@@ -40,12 +40,11 @@ class MediasBaseTest(APITestCase):
         self.likes_list_url = reverse("medias:likes_post-list")
         self.comments_list_url = reverse("medias:comments-list")
 
-
     def _authenticate_user(self, user):
         """Автентифікує клієнта для заданого користувача за допомогою JWT."""
         response = self.client.post(
             reverse("customer:token_obtain_pair"),
-            {"email": user.email, "password": "password123"}
+            {"email": user.email, "password": "password123"},
         )
         access_token = response.data["access"]
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")

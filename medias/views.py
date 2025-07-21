@@ -4,12 +4,14 @@ from rest_framework import views
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 
-from medias.serializers import (PostFollowingSerializer,
-                                MyPostSerializer,
-                                LikeSerializer, CommentsSerializer)
+from medias.serializers import (
+    PostFollowingSerializer,
+    MyPostSerializer,
+    LikeSerializer,
+    CommentsSerializer,
+)
 from rest_framework import viewsets, mixins, status
-from medias.models import (Post,
-                           Like, Comments)
+from medias.models import Post, Like, Comments
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from customer.permissions import IsOwner
@@ -19,11 +21,18 @@ from customer.models import Follow, User
 
 class MyPostView(viewsets.ModelViewSet):
     serializer_class = MyPostSerializer
-    permission_classes = (IsOwner, IsAuthenticated,)
+    permission_classes = (
+        IsOwner,
+        IsAuthenticated,
+    )
     queryset = Post.objects.all()
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user).order_by("-created_at", "-id").distinct()
+        return (
+            self.queryset.filter(user=self.request.user)
+            .order_by("-created_at", "-id")
+            .distinct()
+        )
 
     @action(
         methods=["POST"],
@@ -80,23 +89,27 @@ class FollowingPost(mixins.ListModelMixin, viewsets.GenericViewSet):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                "hashtags", type=str,
-                description="Filter by hashtags (ex ?hashtags=#Tester)"
+                "hashtags",
+                type=str,
+                description="Filter by hashtags (ex ?hashtags=#Tester)",
             ),
             OpenApiParameter(
-                "name_post", type=str,
-                description="Filter by name_post (ex ?name_post=Tester)"
-            )
+                "name_post",
+                type=str,
+                description="Filter by name_post (ex ?name_post=Tester)",
+            ),
         ]
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
 
-class LikeViews(mixins.ListModelMixin,
-                mixins.DestroyModelMixin,
-                mixins.CreateModelMixin,
-                viewsets.GenericViewSet):
+class LikeViews(
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet,
+):
     serializer_class = LikeSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Like.objects.all()
@@ -107,7 +120,7 @@ class LikeViews(mixins.ListModelMixin,
         return queryset.order_by("-created_at")
 
     def perform_create(self, serializer):
-        post = serializer.validated_data.get('post')
+        post = serializer.validated_data.get("post")
         user = self.request.user
 
         if Like.objects.filter(user=user, post=post).exists():
@@ -122,10 +135,12 @@ class LikeViews(mixins.ListModelMixin,
         instance.delete()
 
 
-class CommentsViews(mixins.ListModelMixin,
-                    mixins.DestroyModelMixin,
-                    mixins.CreateModelMixin,
-                    viewsets.GenericViewSet):
+class CommentsViews(
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet,
+):
     serializer_class = CommentsSerializer
     permission_classes = (IsAuthenticated,)
     queryset = Comments.objects.all()
@@ -136,7 +151,7 @@ class CommentsViews(mixins.ListModelMixin,
         return queryset.order_by("-created_at")
 
     def perform_create(self, serializer):
-        post = serializer.validated_data.get('post')
+        post = serializer.validated_data.get("post")
         user = self.request.user
 
         if Comments.objects.filter(user=user, post=post).exists():
